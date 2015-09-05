@@ -1,14 +1,10 @@
 <?php
-
-	error_reporting(E_ALL);
-	//Login:Senha
-	$login = "marcos:123" ;
-
+	//Login:Senha do SPARQL neste formato
+	$login = "login:senha" ;
 	/* Funções referentes as tabelas do bando de dados.
 	 * Encontra um certo dado e o atualiza ou
 	 * Insere um novo dado no banco.
 	*/
-
 
 	// returna o id do politico se o mesmo existir	
 	function existePoli($nome, $data){
@@ -44,7 +40,7 @@
 
 	}
 
-        function prox (){
+    function prox (){
             $format = 'application/sparql-results+json';
 			$endereco = "select ?result { ?id skos:subject <http://dbpedia.org/resource/Category:Brazilian_politicians> .
                                      BIND(xsd:int(substr(str(?id), 43)) AS ?result)
@@ -69,13 +65,13 @@
                         return $respostaJson;
         }
         
-        function foto_politico($url, $id){
+    function foto_politico($url, $id){
             $handle = fopen("/var/www/html/ligadopoliticos/images/politicos/".$id.".jpeg", "x");
             $destino = '/var/www/html/ligadopoliticos/images/politicos/'.$id.'.jpeg';
             file_put_contents($destino, file_get_contents($url));
         }
 
-        function converte_estado($sigla){// ex: convert BA para BAHIA
+    function converte_estado($sigla){// ex: convert BA para BAHIA
             switch ($sigla){
                 case "AC": return "ACRE";
                 case "AL": return "ALAGOAS";
@@ -86,6 +82,7 @@
                 case "DF": return "DISTRITO FEDERAL";
                 case "ES": return "ESPIRITO SANTO";
                 case "GO": return "GOIAS";
+                case "MA": return "MARANHAO";
                 case "MT": return "MATO GROSSO";
                 case "MS": return "MATO GROSSO DO SUL";
                 case "MG": return "MINAS GERAIS";
@@ -106,35 +103,6 @@
                 default: return $sigla;
             }    
         }
-        
-        function existepoliDecla($nome){
-            $aux = '"';
-            $format = 'application/sparql-results+json';
-            $endereco = "select ?id {?id foaf:name ".$aux.$nome.$aux.".  
-                            }";
-		$url = urlencode($endereco);
-		$sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url.'+limit+1';
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $GLOBALS['login']);	
-	    	curl_setopt($curl, CURLOPT_URL, $sparqlURL);
-	    	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); //Recebe o output da url como uma string
-	    	curl_setopt($curl,CURLOPT_HTTPHEADER,array('Accept: '.$format ));
-	    	$resposta = curl_exec( $curl );
-	    	curl_close($curl);
-		$resposta =  str_replace("http://ligadonospoliticos.com.br/politico/","", $resposta);	//retorna id do politico?!	
-
-                $respostaJson = json_decode($resposta);
-                $respostaJson = $respostaJson->results;
-                $respostaJson = $respostaJson->bindings[0];
-                $respostaJson = $respostaJson->id;
-                $respostaJson = $respostaJson->value;
-                $respostaJson = (int)$respostaJson;
-		if($respostaJson == null){
-                    return 0;}
-		if($respostaJson != null){return $respostaJson;}
-
-	}
 
 	function afastamento($id_politico, $cargo, $cargo_uf, $data, $tipo, $motivo){
 
@@ -295,7 +263,6 @@
 
 	}
 
-	
 	function comissao($id_politico, $participacao, $descricao, $data_inicio, $data_fim){
 
 		$format = 'application/sparql-results+json';
@@ -469,9 +436,7 @@
 		}		
 
 	}
-	
 
-		
 	function declaracao_bens($id_politico, $ano, $descricao, $tipo, $valor){
 
 		$format = 'application/sparql-results+json';
@@ -508,7 +473,8 @@
 			}
 		}
 	
-		if($achou){ echo "já foi inserido"; }
+		if($achou){ //echo "já foi inserido";
+		}
 		/*$objects = array();
 		        $results = json_decode($resposta);//descodifica o objeto json para um array
 			//pega o valor dentro de dois array
@@ -719,8 +685,6 @@
 
 	}
 
-
-
 	function eleicao($id_politico, $ano, $nome_urna, $numero_candidato, $partido, $cargo, $cargo_uf, $resultado, $nome_coligacao, $partidos_coligacao, $situacao_candidatura, $numero_protocolo, $numero_processo, $cnpj_campanha){
 
 		$format = 'application/sparql-results+json';
@@ -744,7 +708,6 @@
 
            			}";
 
-                echo $endereco;
 		$url = urlencode($endereco);
 		$sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url.'+limit+1';
 
@@ -820,7 +783,6 @@
 				     DELETE { ?election polbr:CNPJ \"$NewCnpjCampanha\" } $where
 
 				";
-			 echo $endereco;
 			$url = urlencode($endereco);
 			$sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url.'';		
 
@@ -869,7 +831,6 @@
 					 ?election timeline:atYear \"$ano\".}"; 
 			
 
-                         echo $endereco;
 			$url = urlencode($endereco);
 			$sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url.'';		
 
@@ -891,22 +852,33 @@
 		
 			$endereco = "insert data {  
 						 <http://ligadonospoliticos.com.br/politico/$id_politico>  polbr:election _:election.
-						 _:election timeline:atYear \"$ano\".
-						 _:election foaf:name \"$nome_urna\" .
-						 _:election biblio:number \"$numero_candidato\" .
-						 _:election pol:party \"$partido\" .
-						 _:election pol:Office \"$cargo\" .
-						 _:election geospecies:State \"$cargo_uf\" .
-						 _:election earl:outcome \"$resultado\" .
-						 _:election spinrdf:Union \"$nome_coligacao\" .
-						 _:election polbr:unionParties \"$partidos_coligacao\".
-						 _:election polbr:situation \"$situacao_candidatura\" .
-						 _:election polbr:protocolNumber \"$numero_protocolo\" .
-						 _:election polbr:processNumber \"$numero_processo\" .
-						 _:election polbr:CNPJ \"$cnpj_campanha\" .
-		   			}";
+						 _:election timeline:atYear \"$ano\".";
+            if (isset($nome_urna))
+                $endereco = $endereco ."_:election foaf:name \"$nome_urna\" .";
+            if (isset($numero_candidato))
+                $endereco = $endereco ."_:election biblio:number \"$numero_candidato\" .";
+            if (isset($partido))
+                $endereco = $endereco ."_:election pol:party \"$partido\" .";
+            if (isset($cargo))
+                $endereco = $endereco ."_:election pol:Office \"$cargo\" .";
+            if (isset($cargo_uf))
+                $endereco = $endereco ."_:election geospecies:State \"$cargo_uf\" .";
+            if (isset($resultado))
+                $endereco = $endereco ."_:election earl:outcome \"$resultado\" .";
+            if (isset($nome_coligacao))
+                $endereco = $endereco ."_:election spinrdf:Union \"$nome_coligacao\" .";
+            if (isset($partidos_coligacao))
+                $endereco = $endereco ."_:election polbr:unionParties \"$partidos_coligacao\".";
+            if (isset($situacao_candidatura))
+                $endereco = $endereco ."_:election polbr:situation \"$situacao_candidatura\" .";
+            if (isset($numero_protocolo))
+                $endereco = $endereco ."_:election polbr:protocolNumber \"$numero_protocolo\" .";
+            if (isset($numero_processo))
+                $endereco = $endereco ."_:election polbr:processNumber \"$numero_processo\" .";
+            if (isset($cnpj_campanha))
+                $endereco = $endereco ."_:election polbr:CNPJ \"$cnpj_campanha\" .";
+		   			$endereco = $endereco ."}";
 
-                         echo $endereco;
 			$url = urlencode($endereco);
 			$sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url.'';			
 
@@ -923,13 +895,10 @@
 		}
 		
 	}
-
-	
 		
 	function endereco_parlamentar_politico($id_politico, $anexo, $ala, $gabinete, $email, $telefone, $fax, $tipo, $rua, $bairro, $cidade, $estado, $CEP, $CNPJ, $telefone_parlamento, $disque, $site){
 		$format = 'application/sparql-results+json';
 		$politico = "<http://ligadonospoliticos.com.br/politico/".$id_politico.">";
-                echo "telefone:".$telefone;
 		$endereco = "select ?gabinete ?email ?fax ?tipo ?rua ?bairro ?cidade ?estado ?CEP ?CNPJ ?telefone_parlamento ?disque ?site {  
 					 $politico vcard:adr ?x
 					 OPTIONAL { ?x polbr:cabinet ?gabinete}
@@ -948,7 +917,6 @@
 					 
 
            			}";
-                echo $endereco."<br>";
 		$url = urlencode($endereco);
 		$sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url;
 		$curl = curl_init();
@@ -959,8 +927,7 @@
 	    	$resposta = curl_exec( $curl );
 	    	curl_close($curl);
 		$achou = false;
-		echo $resposta;
-                $resposta_decoded = json_decode($resposta);
+        $resposta_decoded = json_decode($resposta);
 		
 		//verifica se algum valor da consulta é diferente de null
 		foreach($resposta_decoded->results->bindings[0] as $reg){
@@ -1064,8 +1031,7 @@
 		   			} WHERE {select ?x {
                                                     $politico vcard:adr ?x 
                                                 }
-                                            }"; 
-			echo $endereco."<br>";
+                                            }";
 			$url = urlencode($endereco);
 			$sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url.'';		
 
@@ -1078,7 +1044,7 @@
 		    	$resposta = curl_exec( $curl );
 
 		    	curl_close($curl);
-                        return $resposta;
+            return $resposta;
 		}
 		else{
 
@@ -1103,7 +1069,6 @@
 				     		 $politico foaf:homepage \"$NewSite\" .
 		   			}";
 
-                        echo $endereco."----------<br>";
 			$url = urlencode($endereco);
 			$sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url.'';			
 
@@ -1116,10 +1081,8 @@
 		    	$resposta = curl_exec( $curl );
 		    	curl_close($curl);
 		}
-
 		
 	}
-	
 	
 	function lideranca($id_politico, $descricao, $tipo, $data_inicio, $data_fim){
 
@@ -1293,8 +1256,7 @@
 		}		
 
 	}
-	
-	
+
 	function mandato($id_politico, $cargo, $data_inicio, $data_fim){
 
 		$format = 'application/sparql-results+json';
@@ -1466,8 +1428,7 @@
 		}
 		
 	}
-		
-	
+
 	function missao($id_politico, $descricao, $tipo, $data_inicio, $data_fim, $documento){
 
 
@@ -1651,58 +1612,17 @@
 		}
 		
 	}
-
-	function politicoTeste($nome_civil, $data_nascimento, $cargo){
-        $id_politico = existePoli($nome_civil, $data_nascimento);
-        $id = $id_politico;
-        $politico = "<http://ligadonospoliticos.com.br/politico/$id_politico>";
-
-        $format = 'application/sparql-results+xml';
-
-        //deletando dados para inserir dados novos
-        $endereco = "
-					DELETE DATA{ $politico pol:Office \"Deputado\" };
-
-				";
-        $url = urlencode($endereco);
-        $sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url.'';
-
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_USERPWD, $GLOBALS['login']);
-        curl_setopt($curl, CURLOPT_URL, $sparqlURL);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST"); // Delete precisa ser feito por POSTcurl_setopt($curl, CURLOPT_RETURNTRANSFER, true); //Recebe o output da url como uma string
-        curl_setopt($curl,CURLOPT_HTTPHEADER,array('Accept: '.$format ));
-        $resposta = curl_exec( $curl );
-        curl_close($curl);
-
-
-        $endereco = "insert data{
-            $politico  pol:Office \"$cargo\"  }";
-        $url = urlencode($endereco);
-        $sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url.'';
-
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_USERPWD, $GLOBALS['login']);
-        curl_setopt($curl, CURLOPT_URL, $sparqlURL);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); //Recebe o output da url como uma string
-        curl_setopt($curl,CURLOPT_HTTPHEADER,array('Accept: '.$format ));
-        $resposta = curl_exec( $curl );
-        curl_close($curl);
-        return $id;
-
-    }
 	
 	function politico($nome_civil, $nome_parlamentar, $nome_pai, $nome_mae, $foto, $sexo, $cor, $data_nascimento, $estado_civil, $ocupacao, $grau_instrucao, $nacionalidade, $cidade_nascimento, $estado_nascimento, $cidade_eleitoral, $estado_eleitoral, $site, $email, $cargo, $cargo_uf, $partido, $situacao){
 
-                //separando cidade e estado de nascimento
-                //Entrada ex : BA-SALVADOR ; Saida : BAHIA E SALVADOR
-                $cidade_nasci = explode('-', $cidade_nascimento);
-                $cidade_nascimento = $cidade_nasci[1];
-                $estado_nascimento = converte_estado($cidade_nasci[0]);
+         //separando cidade e estado de nascimento
+         //Entrada ex : BA-SALVADOR ; Saida : BAHIA E SALVADOR
+        $cidade_nasci = explode('-', $cidade_nascimento);
+        $cidade_nascimento = $cidade_nasci[1];
+        $estado_nascimento = converte_estado($cidade_nasci[0]);
 		//usando a função existePoli para descobrir o ID.
 		$id_politico = existePoli($nome_civil, $data_nascimento);
-                $id = $id_politico;
+        $id = $id_politico;
 		$politico = "<http://ligadonospoliticos.com.br/politico/$id_politico>";
 		$format = 'application/sparql-results+json';
 		$endereco = "select ?nome_parlamentar ?nome_pai ?nome_mae ?foto ?sexo ?cor ?estado_civil ?ocupacao ?grau_instrucao ?nacionalidade ?estado_nascimento ?site ?email ?cargo ?cargo_uf ?partido ?situacao {  
@@ -1719,7 +1639,7 @@
 					 OPTIONAL { $politico dcterms:educationLevel ?grau_instrucao }
 					 OPTIONAL { $politico dbpprop:nationality ?nacionalidade }
 					 OPTIONAL { $politico polbr:state-of-birth ?estado_nascimento }
-            OPTIONAL { $politico polbr:place-of-birth ?cidade_nascimento }
+                     OPTIONAL { $politico polbr:place-of-birth ?cidade_nascimento }
 					 OPTIONAL { $politico foaf:homepage ?site }
 					 OPTIONAL { $politico biblio:Email ?email }
 					 OPTIONAL { $politico pol:Office ?cargo }
@@ -1791,7 +1711,7 @@
 					DELETE DATA{ $politico polbr:officeState \"$NewCargoUf\" };
 					DELETE DATA{ $politico pol:party \"$NewPartido\" };
 					DELETE DATA{ $politico polbr:situation \"$NewSituacao\" };
-				
+
 				";
 			$url = urlencode($endereco);
 			$sparqlURL = 'http://localhost:10035/repositories/politicos_brasileiros?query='.$url.'';		
@@ -1961,10 +1881,6 @@
 		}
 
     }
-
-	
-	
-
 
 	function pronunciamento($id_politico, $tipo, $data, $casa, $partido, $uf, $resumo){
 
@@ -2150,8 +2066,7 @@
 		}
 
 	}
-	
-	
+
 	function proposicao($id_politico, $titulo, $data, $casa, $tipo, $descricao_tipo, $ementa){
 
 		$format = 'application/sparql-results+json';
@@ -2333,7 +2248,6 @@
 		
 		
 	}
-	
 
 	function return_id_fonte($url){
 
@@ -2378,7 +2292,6 @@
 
 
 	}
-
 
 	function fonte_politico($id_politico, $id_fonte){
 
@@ -2536,8 +2449,6 @@
 		}
 
 	}
-
-
 
 	function fonte($nome, $uri, $url){
 

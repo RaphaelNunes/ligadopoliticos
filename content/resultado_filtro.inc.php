@@ -1,6 +1,5 @@
 <?php
 
-
 $consulta = '';
 $nome = '';
 $id_estado = '';
@@ -67,7 +66,6 @@ if (isset($_GET['id_grafico']))
 $consulta = $consulta.$select;
 $consulta = $consulta.$join;
 
-
 if ($situacao == 'Em Exercicio' ){
 	$consulta_situacao =
         "
@@ -89,11 +87,13 @@ if ($situacao == 'Em Exercicio' ){
 	$consulta= $consulta.$consulta_situacao;
 }
 
-    if ($situacao == "Fora de Exercicio" ){
+if ($situacao == "Fora de Exercicio" ){
         $consulta_situacao =
             "
+        ?y <http://ligadonospoliticos.com.br/politicobr#election> ?ele.
+        ?ele <http://motools.sourceforge.net/timeline/timeline.html#atYear>	 \"2014\" .
         {
-         ?y <http://ligadonospoliticos.com.br/politicobr#situation> ?situ FILTER regex (?situ , \"Não Eleito\" , \"i\")
+         ?y <http://ligadonospoliticos.com.br/politicobr#situation> ?situ FILTER regex (?situ , \"Não Eleito \" , \"i\")
         }
         UNION
         {
@@ -122,17 +122,21 @@ if ($nome <> ''){
 }
 
 if ($partido <> ''){
-	$consulta_partido = " ?y <http://www.rdfabout.com/rdf/schema/politico/party> \"$partido\" .";
+	$consulta_partido = " ?y <http://ligadonospoliticos.com.br/politicobr#election> ?ele .
+                          ?ele <http://motools.sourceforge.net/timeline/timeline.html#atYear> \"2014\"  .
+                           ?ele <http://www.rdfabout.com/rdf/schema/politico/party> \"$partido\"  .";
 	$consulta= $consulta.$consulta_partido;
 }
 
 if ($id_estado <> ''){
-	$consulta_estado = "?y <http://ligadonospoliticos.com.br/politicobr#state-of-birth> \"$id_estado\" .";
+	$consulta_estado = "?y <http://ligadonospoliticos.com.br/politicobr#election> ?ele .
+                        ?ele <http://motools.sourceforge.net/timeline/timeline.html#atYear> \"2014\"  .
+                        ?ele <http://rdf.geospecies.org/ont/geospecies#State> \"$id_estado\" .";
 	$consulta= $consulta.$consulta_estado;
 }
 
 if ($cargo <> ''){
-	$consulta_cargo = "?y <http://models.okkam.org/ENS-core-vocabulary#occupation> \"$cargo\" .";
+	$consulta_cargo = "?y <http://www.rdfabout.com/rdf/schema/politico/Office> \"$cargo\" .";
 	$consulta= $consulta.$consulta_cargo;
 }
 
@@ -186,11 +190,11 @@ if ($estado_eleitoral <> ''){
 	//$consulta= $consulta.$consulta_estado_eleitoral;
 }
 
-    $consulta = $consulta.$group_by;
+$consulta = $consulta.$group_by;
 
-    if($ordem = "nome ASC")$ordem = "";
+if($ordem = "nome ASC")$ordem = "";
 
-    $consulta = $consulta.$ordem;
+$consulta = $consulta.$ordem;
 
 if ($id_grafico == 'ocupacao' || $id_grafico == 'declaracao_bens' || $id_grafico == 'cidade_nascimento'){
 	$limite1 = '0';
