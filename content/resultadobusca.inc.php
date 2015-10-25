@@ -232,7 +232,6 @@ $sparqlConsulta = $sparqlConsulta.'
                     LIMIT '.$registros.'
                     OFFSET '.$inicio;
         
-echo $sparqlConsulta;
 $sparqlConsulta = consultaSPARQL($sparqlConsulta);        
 //$sparqlConsulta = consultaSPARQL($sparqlConsulta);
 
