@@ -7,7 +7,7 @@
 	<meta http-equiv="Content-Type" content="text/xhtml; charset=UTF-8" />
 	<link rel="stylesheet" href="http://localhost/ligadopoliticos/estilo.css" type="text/css" />
 	<link rel="meta" type="application/rdf+xml" title="FOAF" href="http://localhost/ligadopoliticos/content/foaf.rdf" /> 
-	<script language="javascript" src="http://ligadonospoliticos.com.br/fusioncharts/FusionCharts.js"></script>
+	<!--<script language="javascript" src="http://ligadonospoliticos.com.br/fusioncharts/FusionCharts.js"></script>-->
 </head>
 <body>
 	<?php 
@@ -46,35 +46,22 @@
 
 				aba_politico_html('No Facebook');
                                 
-				$sparql2a = consultaSPARQL(' select ?tipo ?descricao ?valor
+				$sparql2a = consultaSPARQL(' select ?tipo ?descricao ?valor ?ano
                                 where{
                                   <http://ligadonospoliticos.com.br/politico/'.$recurso.'> polbr:declarationOfAssets ?x.
-                                  ?x timeline:atYear "2010".
+                                  ?x timeline:atYear ?ano.
                                   ?x polbr:DeclarationOfAssets ?y.
                                   ?y dcterms:description ?descricao.
-                                  ?y dcterms:type ?tipo.
+                                  OPTIONAL {?y dcterms:type ?tipo.
+                                            filter(!isblank(?tipo))}.
                                   ?y rdfmoney:Price ?valor.
-                                  }');
+                                  }
+                                  order by ?ano');
                                 $cont_declaracao_bens_a = count($sparql2a);
-                //
+                                
                 if ($cont_declaracao_bens_a > 0){
 					aba_politico_html('Declaração de Bens');	
 				}
-
-                $sparql2b = consultaSPARQL(' select ?tipo ?descricao ?valor
-                                where{
-                                  <http://ligadonospoliticos.com.br/politico/'.$recurso.'> polbr:declarationOfAssets ?x.
-                                  ?x timeline:atYear "2014".
-                                  ?x polbr:DeclarationOfAssets ?y.
-                                  ?y dcterms:description ?descricao.
-                                  OPTIONAL{ ?y dcterms:type ?tipo.}
-                                  ?y rdfmoney:Price ?valor.
-                                  }');
-                $cont_declaracao_bens_b = count($sparql2b);
-
-                if ($cont_declaracao_bens_a == 0 && $cont_declaracao_bens_b > 0 ){
-                    aba_politico_html('Declaração de Bens');
-                }
 
 				$sparql6 = consultaSPARQL(' SELECT ?anexo ?ala ?gabinete ?email ?telefone ?fax
                                 WHERE	{
