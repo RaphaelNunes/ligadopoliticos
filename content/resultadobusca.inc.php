@@ -1,5 +1,4 @@
 <?php
-include ('../consultasSPARQL.php');
 escreve ("<h3>Resultado da Busca</h3>", "<h3>Search Result</h3>");
 
 $conta_selecao = 0;
